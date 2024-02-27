@@ -1,0 +1,373 @@
+// === LICENSE ===
+
+// PROPRIETARY LICENSE AGREEMENT
+// All rights reserved.
+
+// DISCLAIMER:
+// This script is provided "as-is" without any warranties of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability, fitness for a particular purpose, or non-infringement.
+// Azullian will not be liable for any damages or losses arising out of the use or inability to use this script.
+
+// © azullian
+
+// === VERSION ===
+
+//@version=5
+
+// === DECLARATIONS ===
+
+indicator('Bollinger bands / Connectable [Azullian]', shorttitle='Bollinger bands / Connectable [Azullian]', overlay=true)
+
+
+// === IMPORTS ===
+
+import azullian/azLibConnector/1 as azconnector
+
+
+// === CONSTANTS ===
+
+// ————— Constants: Timeframe options
+var TF00                        ="default"
+var TF01                        ="1S"
+var TF02                        ="5S"
+var TF03                        ="15S"
+var TF04                        ="30S"
+var TF05                        ="1"
+var TF06                        ="3"
+var TF07                        ="5"
+var TF08                        ="15"
+var TF09                        ="30"
+var TF10                        ="45"
+var TF11                        ="60"
+var TF12                        ="120"
+var TF13                        ="180"
+var TF14                        ="240"
+var TF15                        ="1D"
+var TF16                        ="5D"
+var TF17                        ="1W"
+var TF18                        ="1M"
+var TF19                        ="3M"
+var TF20                        ="12M"
+
+// ————— Constants: Signal Mode options
+var ALL                         = 'All'
+var ENTRIES_EXITS               = 'Entries & Exits'
+var ENTRIES                     = 'Entries Only'
+var EXITS                       = 'Exits Only'
+var ZONE                        = 'Zone'
+
+// ————— Constants: Signal Count options
+var EVERY                       = "Every"
+var SINGLE                      = "Single"
+var THS                         = "Single+Threshold"
+var THE                         = "Every+Threshold"
+
+// ————— Constants: Signal Category Threshold options
+var THRESHOLD                   = "Threshold"
+var NO_THRESHOLD                = "No Threshold"
+
+// ————— Constants: Connector Flow options
+var BOTH                        = "Both"
+var INDICATOR                   = "Indicator Only"
+var CONNECTOR                   = "Connector Only"
+
+// ————— Constants: Input Labels and Tips - Global settings
+var LBL_INDICATOR_ENERGY        = "🗲️"
+var LBL_INDICATOR_BRIGHTNESS    = "☼"
+var TIP_ENERGY_BRIGHTNESS       = "Energy % / Brightness %"
+
+var LBL_CONNECTOR               = "→"
+var LBL_CONNECTOR_MODE          = "⌥"
+var LBL_THRESHOLD_TYPE          = "Ⴤ"
+var TIP_INPUT_FLOW_THRESH       = "Input / Flow / Threshold type"
+
+var LBL_SIGNALS_MULTI           = "⥅"
+var LBL_SIGNALS_THRESH          = "⥇"
+var LBL_SIGNALS_LIMIT           = "⥱"
+var TIP_MULTI_THRESH_LIMIT      = "Signals Multiplier / Threshold / Limiter"
+
+// ————— Constants: Input Labels and Tips -  Weight system
+var LBL_SIGNAL_MODE             = 'SM'
+var LBL_SIGNAL_PERIOD           = 'SP'
+var LBL_SIGNAL_COUNT            = 'SC'
+var TIP_SIGNAL_MODE             = 'SM: Signal Mode / SP: Signal Period. # of historical bars to lookup the condition. / SC: Signal Count. Define how to count signals within Signal Period. Single: Count a single condition in period. Every: Count every condition in period. Threshold: Count a single condition if number of conditions in period equal or exceed threshold.'
+
+var LBL_EL                      = "EL"
+var LBL_XL                      = "XL"
+var LBL_ES                      = "ES"
+var LBL_XS                      = "XS"
+
+var LBL_LONG_COLOR              = "🡑"
+var LBL_SHORT_COLOR             = "🡓"
+var LBL_NEUTRAL_COLOR           = "↕"
+
+// ————— Constants: Input Labels and Tips -  Indicator
+var LBL_ENABLE                  = 'Enable Indicator'
+var TIP_BB                     = 'BB: Bollinger Bands consist of three lines: a middle band being a simple moving average, and two outer bands that are standard deviations away from the middle. These bands expand when the market is volatile and contract when it is calm. They can help identify potential price highs and lows, and indicate possible buy or sell opportunities as prices touch or move outside the bands.'
+
+var LBL_SYMBOL                  = 'S'
+var LBL_TIMEFRAME               = 'T'
+var TIP_SYMBOL_TIMEFRAME        = "S: Symbol / T: Timeframe"
+
+var LBL_LENGTH                  = 'LE'
+var LBL_STANDARD_DEV            = 'SD'
+var TIP_LE_SD                   = 'LE: Length / SD: Standard deviation'
+
+var LBL_SHOW_BOLLINGER = 'Show Bollinger Bands'
+var LBL_UPPER = 'U'
+var LBL_BASIS = 'B'
+var LBL_LOWER = 'L'
+var LBL_BACKGROUND = 'BG'
+
+// ————— Constants: Defaults - Global settings
+var ENERGY_DEFAULT              = 20
+var ENERGY_MIN                  = 0
+var ENERGY_MAX                  = 100
+var ENERGY_STEP                 = 10
+var BRIGHTNESS_DEFAULT          = 85
+var BRIGHTNESS_MIN              = 0
+var BRIGHTNESS_MAX              = 100 
+var BRIGHTNESS_STEP             = 5
+var MULTIPLIER_DEFAULT          = 1
+var THRESHOLD_DEFAULT           = 12
+var THRESHOLD_MIN               = 0
+var THRESHOLD_MAX               = 499
+var LIMITER_DEFAULT             = 499
+var LIMITER_MIN                 = 0
+var LIMITER_MAX                 = 499
+var CONNECTOR_MODE_DEFAULT      = INDICATOR
+var SIGNALS_THRES_TYPE_DEFAULT  = NO_THRESHOLD
+
+// ————— Constants: Defaults - Indicator settings
+var ENABLE_DEFAULT              = true
+var SYMBOL_DEFAULT              = 'CRYPTOCAP:TOTAL'
+var TIMEFRAME_DEFAULT           = timeframe.period
+
+// ————— Constants: Defaults - Signal weight settings
+var SIGNAL_MIN                  = -12
+var SIGNAL_MAX                  = 12
+
+var SIGNAL_PERIODS_DEFAULT      = 0
+var SIGNAL_MODE_DEFAULT         = ENTRIES
+var SIGNAL_COUNT_DEFAULT        = SINGLE
+
+var EL_DEFAULT                  = 6
+var XL_DEFAULT                  = 6
+var ES_DEFAULT                  = 6
+var XS_DEFAULT                  = 6
+
+// ————— Constants: Colors
+var LONG_COLOR                  = #2962FF
+var SHORT_COLOR                 = #2962FF
+var BB_COLOR                    = #2962FF
+var BASIS_COLOR                 = #FF6D00
+var UPPER_COLOR                 = #2962FF
+var LOWER_COLOR                 = #2962FF
+var BG_COLOR                    = color.rgb(33, 150, 243, 95)
+
+
+// ————— Constants: Icons
+var CAT_ICON                    = shape.cross
+var BB_ICON                     = CAT_ICON
+
+
+// === INPUTS ===
+
+// ————— Inputs: Visualisation settings
+var settingsGroup = "SETTINGS"
+i_indicatorEnergy = input.int(title=LBL_INDICATOR_ENERGY, defval=ENERGY_DEFAULT, minval=ENERGY_MIN, maxval=ENERGY_MAX, step=ENERGY_STEP, inline=LBL_INDICATOR_ENERGY, group=settingsGroup) / 100
+i_indicatorBrightness = input.int(title=LBL_INDICATOR_BRIGHTNESS, defval=BRIGHTNESS_DEFAULT, minval=BRIGHTNESS_MIN, maxval=BRIGHTNESS_MAX, step=BRIGHTNESS_STEP, inline=LBL_INDICATOR_ENERGY, group=settingsGroup, tooltip=TIP_ENERGY_BRIGHTNESS) / 100
+
+// ————— Inputs: Connector Settings
+i_connector = input.source(title=LBL_CONNECTOR, defval=close, inline=LBL_CONNECTOR, group=settingsGroup)
+i_connectorMode = input.string(title=LBL_CONNECTOR_MODE, defval=CONNECTOR_MODE_DEFAULT, options=[BOTH, INDICATOR, CONNECTOR], inline=LBL_CONNECTOR, group=settingsGroup)
+i_signalsThresholdType = input.string(title=LBL_THRESHOLD_TYPE, defval=SIGNALS_THRES_TYPE_DEFAULT, options=[NO_THRESHOLD, THRESHOLD], inline=LBL_CONNECTOR, group=settingsGroup, tooltip=TIP_INPUT_FLOW_THRESH)
+
+// ————— Inputs: Category Settings
+i_signalsMultiplier = input.int(title=LBL_SIGNALS_MULTI, defval=MULTIPLIER_DEFAULT, minval=SIGNAL_MIN, maxval=SIGNAL_MAX, inline=LBL_SIGNALS_MULTI, group=settingsGroup)
+i_signalsThreshold = input.int(title=LBL_SIGNALS_THRESH, defval=THRESHOLD_DEFAULT, minval=THRESHOLD_MIN, maxval=THRESHOLD_MAX, inline=LBL_SIGNALS_MULTI, group=settingsGroup)
+i_signalsLimiter = input.int(title=LBL_SIGNALS_LIMIT, defval=LIMITER_DEFAULT, minval=LIMITER_MIN, maxval=LIMITER_MAX, inline=LBL_SIGNALS_MULTI, group=settingsGroup, tooltip=TIP_MULTI_THRESH_LIMIT)
+
+// ————— Inputs: Indicator inputs
+var bbGroupNameSettings = 'BB - Bollinger bands'
+i_bbEnabled = input.bool(title=LBL_ENABLE, defval=ENABLE_DEFAULT, group=bbGroupNameSettings, tooltip=TIP_BB)
+
+i_bbSymEnabled = input.bool(title=LBL_SYMBOL, defval=false, group=bbGroupNameSettings, inline=LBL_SYMBOL)
+i_bbSymbol = input.symbol(SYMBOL_DEFAULT, title='', inline=LBL_SYMBOL, group=bbGroupNameSettings)
+i_bbTimeFrameTmp = input.timeframe(defval=TF00, title=LBL_TIMEFRAME, options=[TF00,TF01,TF02,TF03,TF04,TF05,TF06,TF07,TF08,TF09,TF10,TF11,TF12,TF13,TF14,TF15,TF16,TF17,TF18,TF19,TF20], tooltip=TIP_SYMBOL_TIMEFRAME, inline=LBL_SYMBOL, group=bbGroupNameSettings) 
+i_bbTimeFrame = i_bbTimeFrameTmp == TF00 ? TIMEFRAME_DEFAULT : i_bbTimeFrameTmp
+
+i_bbsrc = close
+i_bblength = input.int(title=LBL_LENGTH, defval=20, minval=1, inline=LBL_LENGTH, group=bbGroupNameSettings)
+i_bbmult = input.float(title=LBL_STANDARD_DEV, defval=2.0, minval=0.001, maxval=50, step=0.1, group=bbGroupNameSettings, inline=LBL_LENGTH, tooltip=TIP_LE_SD)
+i_bbplot = input.bool(true, title=LBL_SHOW_BOLLINGER)
+i_bbplotU = input.color(UPPER_COLOR, "U", inline=LBL_SHOW_BOLLINGER)
+i_bbplotB = input.color(BASIS_COLOR, "B", inline=LBL_SHOW_BOLLINGER)
+i_bbplotL = input.color(LOWER_COLOR, "L", inline=LBL_SHOW_BOLLINGER)
+i_bbplotBG = input.color(BG_COLOR, "BG", tooltip="U: Upper, B: Basis, L: Lower, BG: Background", inline=LBL_SHOW_BOLLINGER)
+
+var bbGroupNameWeight = 'SIGNAL WEIGHTS AND CONDITIONS'
+i_bbSignalMode = input.string(title=LBL_SIGNAL_MODE, defval=ENTRIES, options=[ALL, ENTRIES_EXITS, ENTRIES, EXITS, ZONE], group=bbGroupNameWeight, tooltip=TIP_SIGNAL_MODE, inline=LBL_SIGNAL_MODE)
+i_bbSignalPeriod = input.int(title=LBL_SIGNAL_PERIOD, defval=SIGNAL_PERIODS_DEFAULT, inline=LBL_SIGNAL_MODE, group=bbGroupNameWeight)
+i_bbSignalCount = input.string(title=LBL_SIGNAL_COUNT, defval=SINGLE, options=[SINGLE, EVERY, THS, THE], inline=LBL_SIGNAL_MODE, group=bbGroupNameWeight, tooltip=TIP_SIGNAL_MODE)
+
+i_bbES = input.int(title=LBL_ES, defval=ES_DEFAULT, minval=SIGNAL_MIN, maxval=SIGNAL_MAX, inline=LBL_ES, group=bbGroupNameWeight)
+i_bbXL =  input.int(title=LBL_XL, defval=XL_DEFAULT, minval=SIGNAL_MIN, maxval=SIGNAL_MAX, inline=LBL_ES, group=bbGroupNameWeight)
+i_bbSHORT_COLOR = input.color(title=LBL_SHORT_COLOR, defval=BB_COLOR, inline=LBL_ES, group=bbGroupNameWeight)
+
+i_bbEL = input.int(title=LBL_EL, defval=EL_DEFAULT, minval=SIGNAL_MIN, maxval=SIGNAL_MAX, inline=LBL_EL, group=bbGroupNameWeight)
+i_bbXS = input.int(title=LBL_XS, defval=XS_DEFAULT, minval=SIGNAL_MIN, maxval=SIGNAL_MAX, inline=LBL_EL, group=bbGroupNameWeight)
+i_bbLONG_COLOR = input.color(title=LBL_LONG_COLOR, defval=BB_COLOR, inline=LBL_EL, group=bbGroupNameWeight)
+
+
+// === FUNCTIONS ===
+
+// ————— Function: Check is in condition zone mode
+isZone(_sm) => _sm == ALL or _sm == ZONE
+
+// ————— Function: Check is in condition start mode
+isEntries(_sm) => _sm == ALL or _sm == ENTRIES
+
+// ————— Function: Check is in condition end mode
+isExits(_sm) => _sm == ALL or _sm == EXITS
+
+// ————— Function: Check is in condition start mode
+isEntriesAndExits(_sm) => _sm == ENTRIES_EXITS
+
+// ————— Function: Get the weight based on the L, XL, S, XS conditions and add or not the condition weight x bars back (0 = current)   
+getWeight(_series, _weight, _signalPeriod, _signalCount) =>
+    seriesWeight = 0
+    for i = 0 to _signalPeriod by 1
+        if _series[i] == true
+            seriesWeight += _weight
+            if _signalCount == SINGLE
+                break
+    if (_signalCount == THS or _signalCount == THE)
+        seriesWeight := (seriesWeight == (_weight * _signalPeriod)) ? _signalCount == THS ? _weight : seriesWeight : 0
+    seriesWeight
+
+// ————— Function: Multiply the value with given multiplier
+applyMultiplier(_s, _m) => _s * _m
+
+// ————— Function: Threshold the value with given threshold type and value
+applyThreshold(_s, _t, _th) => _t == NO_THRESHOLD or _s >= _th ? _s : 0
+
+// ————— Function: Limit the value with given limiter value
+applyLimiter(_s, _l) => _s > _l ? _l : _s
+
+// ————— Function: Get series where (up or under the candle) to draw the shape based on energy settings
+getPlotSeries(_long, _weightLong, _short, _weightShort, _nrg) =>
+    plotSeries = _long ? low - ta.tr * math.abs(_weightLong) * _nrg : _short ? high + ta.tr * math.abs(_weightShort) * _nrg : na
+    plotSeries
+
+// ————— Function: Get color based on brightness settings  
+getPlotColor(_long, _weightLong, _colorLong, _short, _weightShort, _colorShort, _bright) =>
+    plotColor = _long ? color.new(_colorLong, 100 - math.abs(_weightLong) / SIGNAL_MAX * 100 * _bright) : _short ? color.new(_colorShort, 100 - math.abs(_weightShort) / SIGNAL_MAX * 100 * _bright) : na
+    plotColor
+
+// ————— Function: Calculate bb
+bbCalculate(_bbsrc, _bblength, _bbmult, _bbSignalMode) =>
+    basis = ta.sma(_bbsrc, _bblength)
+    dev = i_bbmult * ta.stdev(_bbsrc, _bblength)
+    upper = basis + dev
+    lower = basis - dev
+
+    isbbOversoldCalc = low < lower
+    isbbOversoldZone = isbbOversoldCalc and isZone(_bbSignalMode)
+    isbbOversoldEntry = isbbOversoldCalc and isbbOversoldCalc[1] == false and (isEntries(_bbSignalMode) or isEntriesAndExits(_bbSignalMode))
+    isbbOversoldExit = isbbOversoldCalc == false and isbbOversoldCalc[1] and (isExits(_bbSignalMode) or isEntriesAndExits(_bbSignalMode))
+
+    isbbOverboughtCalc = high > upper
+    isbbOverboughtZone = isbbOverboughtCalc and isZone(_bbSignalMode)
+    isbbOverboughtEntry = isbbOverboughtCalc and isbbOverboughtCalc[1] == false and (isEntries(_bbSignalMode) or isEntriesAndExits(_bbSignalMode))
+    isbbOverboughtExit = isbbOverboughtCalc == false and isbbOverboughtCalc[1] and (isExits(_bbSignalMode) or isEntriesAndExits(_bbSignalMode))
+
+    bbLongCalc = isbbOversoldZone or isbbOversoldEntry or isbbOversoldExit
+    bbShortCalc = isbbOverboughtZone or isbbOverboughtEntry or isbbOverboughtExit
+    [bbLongCalc, bbShortCalc]
+
+bool bbLong = false
+bool bbShort = false
+
+// ————— Function: Calculate bb components
+basisCalculate(_bbsrc, _bblength) =>
+    ta.sma(_bbsrc, _bblength)
+    
+devCalculate(_bbsrc, _bblength, _bbmult) =>
+    _bbmult * ta.stdev(_bbsrc, _bblength)
+
+upperCalculate(basis, dev) =>
+    basis + dev
+
+lowerCalculate(basis, dev) =>
+    basis - dev
+
+// Fetching results for each function
+basisValue = request.security(i_bbSymEnabled ? i_bbSymbol : syminfo.tickerid, i_bbTimeFrame, basisCalculate(i_bbsrc, i_bblength))
+devValue = request.security(i_bbSymEnabled ? i_bbSymbol : syminfo.tickerid, i_bbTimeFrame, devCalculate(i_bbsrc, i_bblength, i_bbmult))
+upperValue = upperCalculate(basisValue, devValue)
+lowerValue = lowerCalculate(basisValue, devValue)
+
+[_bbLong, _bbShort] = request.security(i_bbSymEnabled ? i_bbSymbol : syminfo.tickerid, i_bbTimeFrame, bbCalculate(i_bbsrc, i_bblength, i_bbmult, i_bbSignalMode))
+
+if i_bbEnabled
+    bbLong := _bbLong
+    bbShort := _bbShort
+
+
+// === CALCULATIONS ===
+
+// ————— Calculations: Calculate L, XL, S and XS weight values based on trading conditions, input weight settings, how many x bars back and wheter to include the weight for each occurrence or a single occurence.   
+signalEL = getWeight(bbLong, i_bbEL, i_bbSignalPeriod, i_bbSignalCount)
+signalXL = getWeight(bbShort, i_bbXL, i_bbSignalPeriod, i_bbSignalCount)
+signalES = getWeight(bbShort, i_bbES, i_bbSignalPeriod, i_bbSignalCount)
+signalXS = getWeight(bbLong, i_bbXS, i_bbSignalPeriod, i_bbSignalCount) 
+
+// ————— Calculations: Apply category weight settings - Multiplier
+signalEL := applyMultiplier(signalEL, i_signalsMultiplier)
+signalXL := applyMultiplier(signalXL, i_signalsMultiplier)
+signalES := applyMultiplier(signalES, i_signalsMultiplier)
+signalXS := applyMultiplier(signalXS, i_signalsMultiplier)
+
+// ————— Calculations: Apply category weight settings - Threshold
+signalEL := applyThreshold(signalEL, i_signalsThresholdType, i_signalsThreshold)
+signalXL := applyThreshold(signalXL, i_signalsThresholdType, i_signalsThreshold)
+signalES := applyThreshold(signalES, i_signalsThresholdType, i_signalsThreshold)
+signalXS := applyThreshold(signalXS, i_signalsThresholdType, i_signalsThreshold)
+
+// ————— Calculations: Apply category weight settings - Limiter
+signalEL := applyLimiter(signalEL, i_signalsLimiter)
+signalXL := applyLimiter(signalXL, i_signalsLimiter)
+signalES := applyLimiter(signalES, i_signalsLimiter)
+signalXS := applyLimiter(signalXS, i_signalsLimiter)
+
+// ————— Calculations: Extract passthrough EL, XL, ES and XS signal values from connector
+[ptSignalEL, ptSignalXL, ptSignalES, ptSignalXS] = azconnector.extract(i_connector)
+
+// ————— Calculations: Combine output L, XL, S and XS weight values to single number based on input settings
+connectorOut = switch i_connectorMode
+    BOTH => azconnector.compose(signalEL + ptSignalEL, signalXL + ptSignalXL, signalES + ptSignalES, signalXS + ptSignalXS)
+    INDICATOR => azconnector.compose(signalEL, signalXL, signalES, signalXS)
+    CONNECTOR => azconnector.compose(ptSignalEL, ptSignalXL, ptSignalES, ptSignalXS)
+
+
+// == VISUALS ===
+
+// ————— Plot Category Symbol
+var indicatorSymbol = CAT_ICON
+indicatorPlotSeries = getPlotSeries(signalEL >= i_signalsThreshold, signalEL, signalES >= i_signalsThreshold, signalES, i_indicatorEnergy)
+indicatorPlotColor = getPlotColor(signalEL >= i_signalsThreshold, signalEL, LONG_COLOR, signalES >= i_signalsThreshold, signalES, SHORT_COLOR, i_indicatorBrightness)
+plotshape(series=indicatorPlotSeries, style=indicatorSymbol, title='Settings Indicator', location=location.absolute, color=indicatorPlotColor, size=size.small)
+
+// ————— Plot Indicator Symbol
+bbPlotSeries = i_bbEnabled ? getPlotSeries(bbLong, i_bbEL == 0 ? i_bbXS : i_bbEL, bbShort, i_bbES == 0 ? i_bbXL : i_bbES, i_indicatorEnergy) : na
+bbPlotColor = i_bbEnabled ? getPlotColor(bbLong,  i_bbEL == 0 ? i_bbXS : i_bbEL, i_bbLONG_COLOR, bbShort,  i_bbES == 0 ? i_bbXL : i_bbES, i_bbSHORT_COLOR, i_indicatorBrightness) : na
+plotshape(series=bbPlotSeries, title=bbGroupNameSettings, style=BB_ICON, location=location.absolute, color=bbPlotColor, size=size.tiny)
+
+// ————— Plot Bollinger bands
+plot(i_bbplot ? basisValue : na, "Basis", color=i_bbplotB)
+p1 = plot(i_bbplot ? upperValue : na, "Upper", color=i_bbplotU)
+p2 = plot(i_bbplot ? lowerValue : na, "Lower", color=i_bbplotL)
+fill(p1, p2, title = "Background", color=i_bbplotBG)
+
+// ————— Plot Strategy Connector
+plot(connectorOut, title='Signal connector', display=display.none)

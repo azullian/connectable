@@ -1,0 +1,214 @@
+// === LICENSE ===
+
+// PROPRIETARY LICENSE AGREEMENT
+
+// This script is the proprietary property of Azullian (DBITS BV) and is protected by copyright, trade secret, and other intellectual property laws.
+// All rights reserved. No rights or permissions are granted or implied by the provision, dissemination, or accidental receipt of this script.
+
+// PROPRIETARY WEIGHT SYSTEM:
+// The script incorporates Azullian (DBITS BV) weight system. The conceptual framework, algorithms, methodologies, and implementation of this weight system are the exclusive intellectual property of Azullian (DBITS BV). 
+// Any unauthorized use, reproduction, or imitation of this weight system, whether in whole or in part, is strictly prohibited.
+
+// STRICTLY PROHIBITED USES:
+// 1. You may NOT, under any circumstances, modify, copy, reproduce, republish, upload, post, transmit, or distribute this script in any way.
+// 2. You may NOT sell, rent, sublicense, or otherwise commercially exploit this script.
+// 3. You may NOT decompile, reverse engineer, disassemble, or otherwise attempt to derive the source code of this script.
+
+// DISCLAIMER:
+// This script is provided "as-is" without any warranties of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability, fitness for a particular purpose, or non-infringement.
+// Azullian (DBITS BV) will not be liable for any damages or losses arising out of the use or inability to use this script.
+
+// For inquiries or permission requests, please contact finance@azullian.com.
+
+
+// © azullian
+
+// === VERSION ===
+
+//@version=5
+
+// === DECLARATIONS ===
+
+indicator("Signal Filter / Connectable [Azullian]", shorttitle="Signal Filter / Connectable [Azullian]", overlay=false, max_bars_back=4900, explicit_plot_zorder=true)
+
+// === IMPORTS ===
+
+import azullian/azLibConnector/1 as azconnector
+
+// === CONSTANTS ===
+
+// ————— Constants: Plot Modes
+var PLOTSIGNALS                             = "Signals IN"
+var PLOTSIGNALSFILTERED                     = "Signals OUT"
+
+// ————— Constants: Labels and Tips - Signal Inputs
+var GRP_SIGNAL_INPUTS                       = "SIGNAL INPUTS"
+var LBL_CONNECTOR1                          = "1→"
+var LBL_CONNECTOR2                          = "2→"
+var LBL_CONNECTOR3                          = "3→"
+var LBL_CONNECTOR_SOURCE                    = ""
+var LBL_CONNECTOR_GAIN                      = "G"
+var TIP_SIGNAL_INPUTS                       = "→: Connector. Important! Connect here with the latest Connector from your Indicator Connector Chain to start receiving Signals. / G: Gain. Multiply or divide signal."
+
+// ————— Constants: Labels and Tips - Filter Signals
+var GRP_FILTER_SIGNAL                       = "FILTER SIGNALS"
+var LBL_FILTER_EL_ENABLED                   = "EL"
+var LBL_FILTER_XL_ENABLED                   = "XL"
+var LBL_FILTER_ES_ENABLED                   = "ES"
+var LBL_FILTER_XS_ENABLED                   = "XS"
+var TIP_FILTER_SIGNAL                       = "Select which signals, based on the threshold, are filtered and allowed to be passed through."
+
+var LBL_FILTER_THRESHOLD                    = "TH"
+var TIP_FILTER_THRESHOLD                    = "TH: Filter Threshold. Define a threshold at which enabled signals are allowe to be passed through."
+
+// ————— Constants: Labels and Tips - Visuals
+var GRP_VISUALS                             = "VISUALS"
+var LBL_VISUALS_BRIGHTNESS                  = "☼"
+var LBL_VISUALS_COLOR_ES                    = "🡓"
+var LBL_VISUALS_COLOR_XS                    = "⭳"
+var TIP_VISUALS_SHORT                       = "☼: Brightness % / 🡓: ES Color / ⭳: XS Color"
+
+var LBL_VISUALS_MODE                        = "⌥"
+var LBL_VISUALS_COLOR_EL                    = "🡑"
+var LBL_VISUALS_COLOR_XL                    = "⭱"
+var TIP_VISUALS_LONG                        = "⌥: Plot mode / 🡑: EL Color / ⭱: XL Color"
+
+// ————— Constants: Defaults - Signal Inputs
+var CONNECTOR_ENABLED_DEFAULT               = false
+var CONNECTOR_GAIN_DEFAULT                  = 1.0
+var CONNECTOR_GAIN_MIN                      = 0.01
+var CONNECTOR_GAIN_MAX                      = 100.0
+var CONNECTOR_GAIN_STEP                     = 0.1
+
+// ————— Constants: Defaults - Filter Signals
+var FILTER_EL_ENABLED_DEFAULT               = true
+var FILTER_XL_ENABLED_DEFAULT               = true
+var FILTER_ES_ENABLED_DEFAULT               = true
+var FILTER_XS_ENABLED_DEFAULT               = true
+
+// ————— Constants: Defaults - Filter Settings
+var FILTER_THRESHOLD_DEFAULT                = 5
+var FILTER_THRESHOLD_MIN                    = -499
+var FILTER_THRESHOLD_MAX                    = 499
+var FILTER_THRESHOLD_STEP                   = 1
+
+// ————— Constants: Defaults - Visuals
+var VISUALS_BRIGHTNESS_DEFAULT              = 100
+var VISUALS_BRIGHTNESS_MIN                  = 0
+var VISUALS_BRIGHTNESS_MAX                  = 100
+var VISUALS_BRIGHTNESS_STEP                 = 10
+var VISUALS_COLOR_ES_DEFAULT                = color.rgb(233, 30, 99)
+var VISUALS_COLOR_XS_DEFAULT                = color.rgb(125, 0, 67)
+
+var VISUALS_MODE_DEFAULT                    = PLOTSIGNALS
+var VISUALS_COLOR_EL_DEFAULT                = color.rgb(38, 166, 154)
+var VISUALS_COLOR_XL_DEFAULT                = color.rgb(0, 73, 75)
+
+// === INPUTS ===
+
+// ————— Inputs: Indicator Input Settings
+i_connector1Enabled = input.bool(title=LBL_CONNECTOR1, defval=CONNECTOR_ENABLED_DEFAULT, inline=LBL_CONNECTOR1, group=GRP_SIGNAL_INPUTS)
+i_connector1 = input.source(title=LBL_CONNECTOR_SOURCE, defval=close, inline=LBL_CONNECTOR1, group=GRP_SIGNAL_INPUTS)
+i_connector1Gain = input.float(title=LBL_CONNECTOR_GAIN, defval=CONNECTOR_GAIN_DEFAULT, minval=CONNECTOR_GAIN_MIN, maxval=CONNECTOR_GAIN_MAX, step=CONNECTOR_GAIN_STEP, inline=LBL_CONNECTOR1, group=GRP_SIGNAL_INPUTS, tooltip=TIP_SIGNAL_INPUTS)
+
+i_connector2Enabled = input.bool(title=LBL_CONNECTOR2, defval=CONNECTOR_ENABLED_DEFAULT, inline=LBL_CONNECTOR2, group=GRP_SIGNAL_INPUTS)
+i_connector2 = input.source(title=LBL_CONNECTOR_SOURCE, defval=close, inline=LBL_CONNECTOR2, group=GRP_SIGNAL_INPUTS)
+i_connector2Gain = input.float(title=LBL_CONNECTOR_GAIN, defval=CONNECTOR_GAIN_DEFAULT, minval=CONNECTOR_GAIN_MIN, maxval=CONNECTOR_GAIN_MAX, step=CONNECTOR_GAIN_STEP, inline=LBL_CONNECTOR2, group=GRP_SIGNAL_INPUTS, tooltip=TIP_SIGNAL_INPUTS)
+
+i_connector3Enabled = input.bool(title=LBL_CONNECTOR3, defval=CONNECTOR_ENABLED_DEFAULT, inline=LBL_CONNECTOR3, group=GRP_SIGNAL_INPUTS)
+i_connector3 = input.source(title=LBL_CONNECTOR_SOURCE, defval=close, inline=LBL_CONNECTOR3, group=GRP_SIGNAL_INPUTS)
+i_connector3Gain = input.float(title=LBL_CONNECTOR_GAIN, defval=CONNECTOR_GAIN_DEFAULT, minval=CONNECTOR_GAIN_MIN, maxval=CONNECTOR_GAIN_MAX, step=CONNECTOR_GAIN_STEP, inline=LBL_CONNECTOR3, group=GRP_SIGNAL_INPUTS, tooltip=TIP_SIGNAL_INPUTS)
+
+// ————— Inputs: Signal Filters
+i_filterELEnabled = input.bool(title=LBL_FILTER_EL_ENABLED, defval=FILTER_EL_ENABLED_DEFAULT, inline=LBL_FILTER_EL_ENABLED, group=GRP_FILTER_SIGNAL)
+i_filterXLEnabled = input.bool(title=LBL_FILTER_XL_ENABLED, defval=FILTER_XL_ENABLED_DEFAULT, inline=LBL_FILTER_EL_ENABLED, group=GRP_FILTER_SIGNAL)
+i_filterESEnabled = input.bool(title=LBL_FILTER_ES_ENABLED, defval=FILTER_ES_ENABLED_DEFAULT, inline=LBL_FILTER_EL_ENABLED, group=GRP_FILTER_SIGNAL)
+i_filterXSEnabled = input.bool(title=LBL_FILTER_XS_ENABLED, defval=FILTER_XS_ENABLED_DEFAULT, inline=LBL_FILTER_EL_ENABLED, group=GRP_FILTER_SIGNAL, tooltip=TIP_FILTER_SIGNAL)
+
+i_filterThreshold = input.int(title=LBL_FILTER_THRESHOLD, defval=FILTER_THRESHOLD_DEFAULT, minval=FILTER_THRESHOLD_MIN, maxval=FILTER_THRESHOLD_MAX, step=FILTER_THRESHOLD_STEP, inline=LBL_FILTER_THRESHOLD, group=GRP_FILTER_SIGNAL, tooltip=TIP_FILTER_THRESHOLD)
+
+// ————— Inputs: Visualisation settings
+i_plotBrightness = input.int(title=LBL_VISUALS_BRIGHTNESS, defval=VISUALS_BRIGHTNESS_DEFAULT, minval=VISUALS_BRIGHTNESS_MIN, maxval=VISUALS_BRIGHTNESS_MAX, step=VISUALS_BRIGHTNESS_STEP, inline=LBL_VISUALS_BRIGHTNESS, group=GRP_VISUALS) / 100
+i_plotColorES = input.color(title=LBL_VISUALS_COLOR_ES, defval=VISUALS_COLOR_ES_DEFAULT, inline=LBL_VISUALS_BRIGHTNESS, group=GRP_VISUALS)
+i_plotColorXS = input.color(title=LBL_VISUALS_COLOR_XS, defval=VISUALS_COLOR_XS_DEFAULT, inline=LBL_VISUALS_BRIGHTNESS, group=GRP_VISUALS, tooltip=TIP_VISUALS_SHORT)
+
+i_plotMode = input.string(title=LBL_VISUALS_MODE, defval=VISUALS_MODE_DEFAULT, options=[PLOTSIGNALS, PLOTSIGNALSFILTERED], inline=LBL_VISUALS_MODE, group=GRP_VISUALS)
+i_plotColorEL = input.color(title=LBL_VISUALS_COLOR_EL, defval=VISUALS_COLOR_EL_DEFAULT, inline=LBL_VISUALS_MODE, group=GRP_VISUALS)
+i_plotColorXL = input.color(title=LBL_VISUALS_COLOR_XL, defval=VISUALS_COLOR_XL_DEFAULT, inline=LBL_VISUALS_MODE, group=GRP_VISUALS, tooltip=TIP_VISUALS_LONG)
+
+// === FUNCTIONS ===
+
+// ————— Function: Extract signal weights from specific connector
+extractSignalWeights(_connectorEnabled, _connector, _connectorGain) =>
+    if (_connectorEnabled)
+        [ptSignalEL, ptSignalXL, ptSignalES, ptSignalXS] = azconnector.extract(_connector)
+        [ptSignalEL * _connectorGain, ptSignalXL * _connectorGain, ptSignalES * _connectorGain, ptSignalXS * _connectorGain]
+    else
+        [0.0, 0.0, 0.0, 0.0]
+
+// ————— Function: Filter signal based on threshold
+filterSignal(enabled, threshold, signal) => enabled and signal >= threshold ? signal : 0.0  
+
+// ————— Function: Apply brightness settings on color
+applyBrightness(_color, _bright) =>
+    color _r = color.new(_color, 100 - 100 * _bright)
+
+// === CALCULATIONS ===
+
+// ————— Calculations: Extract passthrough EL, XL, ES and XS signal values from each connector
+[ptSignalEL1, ptSignalXL1, ptSignalES1, ptSignalXS1] = extractSignalWeights(i_connector1Enabled, i_connector1, i_connector1Gain)
+[ptSignalEL2, ptSignalXL2, ptSignalES2, ptSignalXS2] = extractSignalWeights(i_connector2Enabled, i_connector2, i_connector2Gain)
+[ptSignalEL3, ptSignalXL3, ptSignalES3, ptSignalXS3] = extractSignalWeights(i_connector3Enabled, i_connector3, i_connector3Gain)
+
+ptSignalEL = ptSignalEL1 + ptSignalEL2 + ptSignalEL3
+ptSignalXL = ptSignalXL1 + ptSignalXL2 + ptSignalXL3
+ptSignalES = ptSignalES1 + ptSignalES2 + ptSignalES3
+ptSignalXS = ptSignalXS1 + ptSignalXS2 + ptSignalXS3
+
+// ————— Calculations: Apply Filters
+signalEL = filterSignal(i_filterELEnabled, i_filterThreshold, ptSignalEL)
+signalXL = filterSignal(i_filterXLEnabled, i_filterThreshold, ptSignalXL)
+signalES = filterSignal(i_filterESEnabled, i_filterThreshold, ptSignalES)
+signalXS = filterSignal(i_filterXSEnabled, i_filterThreshold, ptSignalXS)
+
+// ————— Calculations: Convert signal weights to Connector output stream
+connectorOut = azconnector.compose(signalEL, signalXL, signalES, signalXS)
+
+// === VISUALS ===
+
+// ————— Visuals: Plot zeroline needed for reference to plot fills 
+zeroPlotId = plot(0, "Zero", color.new(color.silver, 100), 0, plot.style_circles)
+zeroPlotHlineId = hline(0, "ZeroHiLine", color.new(color.silver, 100))
+
+// ————— Visuals: Plot Threshold
+thresholdPlotId = hline(i_plotMode == PLOTSIGNALS or i_plotMode == PLOTSIGNALSFILTERED ? i_filterThreshold : na, linestyle=hline.style_dotted, linewidth=2, color=color.new(color.blue, 50), title="TH", editable=false)
+fill(thresholdPlotId, zeroPlotHlineId, color=color.new(color.blue, 90))
+
+// ————— Visuals: Plot Incoming Signals
+signalELPlotId = plot(i_plotMode == PLOTSIGNALS ? ptSignalEL : na, style=plot.style_line, linewidth=1, color=applyBrightness(i_plotColorEL, i_plotBrightness), title="EL")
+signalXLPlotId = plot(i_plotMode == PLOTSIGNALS ? ptSignalXL : na, style=plot.style_line, linewidth=1, color=applyBrightness(i_plotColorXL, i_plotBrightness), title="XL")
+signalESPlotId = plot(i_plotMode == PLOTSIGNALS ? ptSignalES : na, style=plot.style_line, linewidth=1, color=applyBrightness(i_plotColorES, i_plotBrightness), title="ES")
+signalXSPlotId = plot(i_plotMode == PLOTSIGNALS ? ptSignalXS : na, style=plot.style_line, linewidth=1, color=applyBrightness(i_plotColorXS, i_plotBrightness), title="XS")
+
+fill(signalELPlotId, zeroPlotId, color=applyBrightness(i_plotColorEL, i_plotBrightness/8))
+fill(signalXLPlotId, zeroPlotId, color=applyBrightness(i_plotColorXL, i_plotBrightness/8))
+fill(signalESPlotId, zeroPlotId, color=applyBrightness(i_plotColorES, i_plotBrightness/8))
+fill(signalXSPlotId, zeroPlotId, color=applyBrightness(i_plotColorXS, i_plotBrightness/8))
+
+// ————— Visuals: Plot Outgoing Signals
+signalELFilteredPlotId = plot(i_plotMode == PLOTSIGNALSFILTERED and i_filterELEnabled ? signalEL : na, style=plot.style_line, linewidth=1, color=applyBrightness(i_plotColorEL, i_plotBrightness), title="EL-OUT")
+signalXLFilteredPlotId = plot(i_plotMode == PLOTSIGNALSFILTERED and i_filterXLEnabled ? signalXL : na, style=plot.style_line, linewidth=1, color=applyBrightness(i_plotColorXL, i_plotBrightness), title="XL-OUT")
+signalESFilteredPlotId = plot(i_plotMode == PLOTSIGNALSFILTERED and i_filterESEnabled ? signalES : na, style=plot.style_line, linewidth=1, color=applyBrightness(i_plotColorES, i_plotBrightness), title="ES-OUT")
+signalXSFilteredPlotId = plot(i_plotMode == PLOTSIGNALSFILTERED and i_filterXSEnabled ? signalXS : na, style=plot.style_line, linewidth=1, color=applyBrightness(i_plotColorXS, i_plotBrightness), title="XS-OUT")
+
+fill(signalELFilteredPlotId, zeroPlotId, color=applyBrightness(i_plotColorEL, i_plotBrightness/8))
+fill(signalXLFilteredPlotId, zeroPlotId, color=applyBrightness(i_plotColorXL, i_plotBrightness/8))
+fill(signalESFilteredPlotId, zeroPlotId, color=applyBrightness(i_plotColorES, i_plotBrightness/8))
+fill(signalXSFilteredPlotId, zeroPlotId, color=applyBrightness(i_plotColorXS, i_plotBrightness/8))
+
+// ————— Visuals: Plot Connector Output
+plot(connectorOut, title="Signal Connector", display=display.none, color=color.new(color.blue, 100))
+
+// === ALERTS ===
+
+//alertcondition

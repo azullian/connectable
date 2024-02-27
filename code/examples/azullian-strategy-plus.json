@@ -1,0 +1,147 @@
+{
+    "id": 20411,
+    "t": "2023-11-03T21:21:00Z",
+    "al": {
+      "id": "639bfa9a-5f01-4031-8880-7ec01e972055",
+      "n": "TEST05",
+      "l": "ABC123"
+    },
+    "sym": {
+      "typ": "crypto",
+      "r": "DOGEUSD.PM",
+      "pre": "KRAKEN",
+      "tc": "DOGEUSD.PM",
+      "bc": "DOGE",
+      "c": "USD",
+      "d": "DOGEUSD Multi Collateral Perpetual Futures Contract",
+      "mtc": 0.000001,
+      "pv": 1,
+      "ct": "PF_DOGEUSD"
+    },
+    "ch": {
+      "pd": "1",
+      "mul": 1
+    },
+    "bar": {
+      "id": 20410,
+      "t": "2023-11-03T21:19:00Z",
+      "o": 0.068045,
+      "h": 0.068045,
+      "l": 0.068045,
+      "c": 0.068045,
+      "v": 50
+    },
+    "strat": {
+      "n": "Strategy - Plus / Connectable [Azullian]",
+      "sig": {
+        "c1e": true,
+        "c1s": 506500.500501,
+        "c1g": 1,
+        "c2e": false,
+        "c2s": 0.068045,
+        "c2g": 1,
+        "sm": "Swing (EL, ES)",
+        "xm": "Always",
+        "mlp": 0,
+        "mpp": 0
+      },
+      "inv": {
+        "lb": "Equity",
+        "lp": 100,
+        "pb": "Equity",
+        "pp": 100,
+        "pcb": "Equity",
+        "pcp": 100,
+        "pct": 100,
+        "elp": 100,
+        "esp": 100,
+        "rsk": 1,
+        "lvg": 10
+      },
+      "sl": {
+        "lb": "Price Entry + Offset",
+        "lp": 0.1,
+        "lsrc": 0.068045,
+        "lt": "Trail Stop",
+        "ltp": 1,
+        "sb": "Price Entry + Offset",
+        "sp": 0.1,
+        "ssrc": 0.068045,
+        "st": "Trail Stop",
+        "stp": 1
+      },
+      "tp": {
+        "lb": "Price Entry + Offset",
+        "lp": 1,
+        "lsrc": 0.068045,
+        "lt": "Fixed",
+        "ltp": 1,
+        "sb": "Price Entry + Offset",
+        "sp": 1,
+        "ssrc": 0.068045,
+        "st": "Fixed",
+        "stp": 1
+      },
+      "dis": {
+        "sigp": 10,
+        "dcap": 0,
+        "brop": 90
+      },
+      "dca": {
+        "lvl": 3,
+        "pl": "linear",
+        "os": "linear"
+      },
+      "bro": {
+        "lvl": 3,
+        "pl": "linear",
+        "os": "linear"
+      },
+      "ord": {
+        "pmin": 0,
+        "pmax": 999999999,
+        "qmin": 0,
+        "qmax": 999999999,
+        "dp": 6,
+        "dq": 3
+      },
+      "cnd": {
+        "de": true,
+        "start": "2023-11-03T21:30:00Z",
+        "end": "2024-12-31T00:00:00Z",
+        "idoe": false,
+        "ido": 1000,
+        "dle": false,
+        "dl": 100,
+        "clde": false,
+        "cld": false,
+        "dde": false,
+        "dd": 100,
+        "mpe": false,
+        "mp": 100,
+        "mle": false,
+        "ml": -100
+      }
+    },
+    "perf": {
+      "ic": 1000,
+      "eq": 1000,
+      "np": 0,
+      "op": 0,
+      "ct": 0,
+      "ot": 0,
+      "p": "FLAT",
+      "ps": 0,
+      "pp": "FLAT",
+      "pps": 0
+    },
+    "sig": {
+      "el": 6,
+      "xl": 0,
+      "es": 0,
+      "xs": 0
+    },
+    "ord": [
+      
+    ]
+  }
