@@ -1,27 +1,7 @@
-// === LICENSE ===
+// ===LICENSE ===
 
-// PROPRIETARY LICENSE AGREEMENT
-
-// This script is the proprietary property of Azullian (DBITS BV) and is protected by copyright, trade secret, and other intellectual property laws.
-// All rights reserved. No rights or permissions are granted or implied by the provision, dissemination, or accidental receipt of this script.
-
-// PROPRIETARY WEIGHT SYSTEM:
-// The script incorporates Azullian (DBITS BV) weight system. The conceptual framework, algorithms, methodologies, and implementation of this weight system are the exclusive intellectual property of Azullian (DBITS BV). 
-// Any unauthorized use, reproduction, or imitation of this weight system, whether in whole or in part, is strictly prohibited.
-
-// STRICTLY PROHIBITED USES:
-// 1. You may NOT, under any circumstances, modify, copy, reproduce, republish, upload, post, transmit, or distribute this script in any way.
-// 2. You may NOT sell, rent, sublicense, or otherwise commercially exploit this script.
-// 3. You may NOT decompile, reverse engineer, disassemble, or otherwise attempt to derive the source code of this script.
-
-// DISCLAIMER:
-// This script is provided "as-is" without any warranties of any kind, either expressed or implied, including, but not limited to, the implied warranties of merchantability, fitness for a particular purpose, or non-infringement.
-// Azullian (DBITS BV) will not be liable for any damages or losses arising out of the use or inability to use this script.
-
-// For inquiries or permission requests, please contact finance@azullian.com.
-
-
-// © azullian
+// This work is licensed under a Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0) https://creativecommons.org/licenses/by-nc-sa/4.0/
+// © Azullian
 
 // === VERSION ===
 
@@ -33,7 +13,7 @@ indicator("Signal Filter / Connectable [Azullian]", shorttitle="Signal Filter / 
 
 // === IMPORTS ===
 
-import azullian/azLibConnector/1 as azconnector
+import azullian/azLibConnector/2 as azconnector
 
 // === CONSTANTS ===
 
